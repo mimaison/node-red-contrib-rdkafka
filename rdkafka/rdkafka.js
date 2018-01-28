@@ -7,6 +7,7 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, n);
         this.broker = n.broker;
         this.clientid = n.clientid;
+        this.config = n.config;
     }
     RED.nodes.registerType("kafka-broker", KafkaBrokerNode, {});
 
@@ -29,8 +30,7 @@ module.exports = function(RED) {
             if (node.topic !== undefined) {
                 // subscribe to kafka topic (if provided), otherwise print error message
                 try {
-                    // create node-rdkafka consumer
-                    consumer = new Kafka.KafkaConsumer({
+                    var consumerConfig = {
                         'group.id': node.cgroup,
                         'client.id': node.brokerConfig.clientid,
                         'metadata.broker.list': node.brokerConfig.broker,
@@ -41,7 +41,16 @@ module.exports = function(RED) {
                         'fetch.wait.max.ms': 1,         //librkafka recommendation for low latency
                         'fetch.error.backoff.ms': 100,   //librkafka recommendation for low latency
                         'api.version.request': true
-                    }, {});
+                    }
+
+                    // Add broker config
+                    var brokerConfig = JSON.parse(node.brokerConfig.config);
+                    for (var key in brokerConfig) {
+                        consumerConfig[key] = brokerConfig[key];
+                    }
+
+                    // create node-rdkafka consumer
+                    consumer = new Kafka.KafkaConsumer(consumerConfig, {});
 
                     // Setup Flowing mode
                     consumer.connect();
@@ -127,7 +136,7 @@ module.exports = function(RED) {
             });
 
             try {
-                producer = new Kafka.Producer({
+                var producerConfig = {
                     'client.id': node.brokerConfig.clientid,
                     'metadata.broker.list': node.brokerConfig.broker,
                     //'compression.codec': 'gzip',
@@ -138,7 +147,13 @@ module.exports = function(RED) {
                     'queue.buffering.max.ms': 10,
                     'batch.num.messages': 1000000,
                     'api.version.request': true  //added to force 0.10.x style timestamps on all messages
-                });
+                }
+                // Add broker config
+                var brokerConfig = JSON.parse(node.brokerConfig.config);
+                for (var key in brokerConfig) {
+                    producerConfig[key] = brokerConfig[key];
+                }
+                producer = new Kafka.Producer(producerConfig);
 
                 // Connect to the broker manually
                 producer.connect();

@@ -113,6 +113,10 @@
         <label for="node-config-input-clientid"><i class="icon-tag"></i> Client ID</label>
         <input type="text" id="node-config-input-clientid" placeholder="Leave blank for auto generated">
     </div>
+    <div class="form-row">
+        <label for="node-config-input-config"><i class="icon-tag"></i> Configuration</label>
+        <input type="text" id="node-config-input-config" placeholder="Leave blank for none">
+    </div>
     <div class="form-tips">
         <b>Note:</b>The "Broker List" is a list of Kafka Brokers in the form HOST1:PORT1[,HOST2:PORT2[...]]
     </div>
@@ -123,7 +127,8 @@
         category: 'config',
         defaults: {
             broker: { value:"",required:true },
-            clientid: { value:"" }
+            clientid: { value:"" },
+            config: { value:""}
         },
         label: function() {
             if (this.broker == "") { this.broker = "localhost:9092"; }
